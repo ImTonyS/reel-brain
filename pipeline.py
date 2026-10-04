@@ -160,3 +160,18 @@ def process(url, vocab, workdir=None):
     best = [frames[i] for i in result["best_frames"] if 0 <= i < len(frames)] or frames[:2]
     return {"url": url, "meta": meta, "transcript": transcript, "frames": frames,
             "best_frames": best[:3], "workdir": workdir, **result}
+
+
+def ask(question, saved):
+    """Answer from what the user saved, citing the reel."""
+    notes = [{k: e.get(k) for k in ("title", "summary", "key_points", "action", "what_to_steal",
+                                    "themes", "url", "date")} for e in saved[-80:]]
+    resp = client.chat.completions.create(
+        model=ANALYSIS_MODEL,
+        messages=[{"role": "system", "content":
+                   "Answer in Spanish (Mexico), short and plain, using ONLY the saved reels below. "
+                   "Cite the reel title and its url for each fact. If nothing matches, say so."},
+                  {"role": "user", "content": json.dumps({"question": question, "saved_reels": notes},
+                                                         ensure_ascii=False)}],
+    )
+    return resp.choices[0].message.content

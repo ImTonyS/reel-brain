@@ -61,6 +61,16 @@ async def gusto(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         f"Lo que estás aprendiendo:\n{fmt(p['themes'])}")
 
 
+async def preguntar(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    question = " ".join(ctx.args)
+    saved = [e for e in library.entries(update.effective_chat.id) if not e.get("seed")]
+    if not question or not saved:
+        await update.message.reply_text("Uso: /preguntar ¿cuál era el truco de TDAH que guardé?")
+        return
+    answer = await asyncio.to_thread(pipeline.ask, question, saved)
+    await update.message.reply_text(answer, disable_web_page_preview=True)
+
+
 async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat.id
     url = pipeline.clean_url(update.message.text or update.message.caption or "")
@@ -126,6 +136,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("soyyo", whoami))
     app.add_handler(CommandHandler("gusto", gusto))
+    app.add_handler(CommandHandler("preguntar", preguntar))
     app.add_handler(CallbackQueryHandler(on_remind, pattern="^remind:"))
     app.add_handler(MessageHandler(filters.TEXT | filters.CAPTION, on_message))
     app.run_polling()
