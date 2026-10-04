@@ -29,7 +29,7 @@ def download(url, workdir, use_cookies=False):
     opts = {"outtmpl": str(workdir / "video.%(ext)s"), "quiet": True, "no_warnings": True, "noprogress": True,
             "format": "mp4/bestvideo+bestaudio/best", "merge_output_format": "mp4"}
     # Anonymous first; when Instagram rate-limits, retry logged in with browser cookies.
-    attempts = [None] + ([] if not use_cookies else [b for b in (os.getenv("IG_COOKIES_BROWSER"), "chrome", "arc", "brave", "firefox", "safari") if b])
+    attempts = [None]  # anonymous only: never touch the user's Instagram account
     for browser in attempts:
         try_opts = dict(opts, **({"cookiesfrombrowser": (browser,)} if browser else {}))
         try:
@@ -170,9 +170,13 @@ def analyze(frames, transcript, meta, vocab, note=""):
     return json.loads(resp.choices[0].message.content)
 
 
-def process(url, vocab, note="", workdir=None, use_cookies=True):
+def process(url, vocab, note="", workdir=None, use_cookies=True, video=None):
+    """url: Instagram link, downloaded anonymously. video: a local file (screen recording sent to the bot)."""
     workdir = Path(workdir or tempfile.mkdtemp(prefix="reel-"))
-    video, meta = download(url, workdir, use_cookies)
+    if video:
+        meta = {"uploader": "", "handle": "grabacion", "caption": "", "duration": None}
+    else:
+        video, meta = download(url, workdir, use_cookies)
     frames = extract_frames(video, workdir)
     transcript = transcribe(video, workdir)
     result = analyze(frames, transcript, meta, vocab, note)
