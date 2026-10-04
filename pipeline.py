@@ -53,8 +53,8 @@ def duration_of(video):
 def extract_frames(video, workdir):
     """Scene-change frames; falls back to evenly spaced ones for static videos."""
     subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf",
-                    "select='gt(scene,0.3)',scale=720:-2", "-vsync", "vfr",
-                    "-frames:v", str(MAX_FRAMES), str(workdir / "scene_%02d.jpg")], check=True)
+                    "select='gt(scene,0.3)',scale=720:-2,format=yuvj420p", "-vsync", "vfr",
+                    "-frames:v", str(MAX_FRAMES), str(workdir / "scene_%02d.jpg")])
     frames = sorted(workdir.glob("scene_*.jpg"))
     if len(frames) < 3:
         dur = max(duration_of(video), 1)
@@ -62,7 +62,7 @@ def extract_frames(video, workdir):
             t = dur * (i + 0.5) / 4
             out = workdir / f"even_{i:02d}.jpg"
             subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", str(video),
-                            "-frames:v", "1", "-vf", "scale=720:-2", str(out)], check=True)
+                            "-frames:v", "1", "-vf", "scale=720:-2,format=yuvj420p", str(out)])
         frames += sorted(workdir.glob("even_*.jpg"))
     return frames[:MAX_FRAMES]
 
