@@ -97,37 +97,14 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
 
     status = await update.message.reply_text("Viendo el reel…")
-    note = re.sub(r"https?://\S+", "", raw).strip()
-    held, at = ctx.chat_data.pop("pending_note", ("", datetime.min))
-    if held and (datetime.now() - at).seconds < 30:
-        note = f"{held} {note}".strip()
-    await process_and_reply(update, ctx, status, url=url, note=note)
-
-
-async def on_video(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    """Screen recording of a reel: no Instagram involved at all."""
-    msg = update.message
-    media = msg.video or msg.document
-    if media.file_size and media.file_size > 20 * 1024 * 1024:
-        await msg.reply_text("Pesa más de 20 MB. Recórtala o mándala como video normal (Telegram la comprime).")
-        return
-    status = await msg.reply_text("Viendo la grabación…")
-    import tempfile
-    workdir = Path(tempfile.mkdtemp(prefix="reel-"))
-    path = workdir / "video.mp4"
-    await (await media.get_file()).download_to_drive(path)
-    ctx.chat_data["pending_video"] = (str(path), str(workdir))
-    await process_and_reply(update, ctx, status, url="", note=(msg.caption or "").strip(),
-                            video=path, workdir=workdir)
-
-
-async def process_and_reply(update, ctx, status, url, note, video=None, workdir=None):
-    chat = update.effective_chat.id
-    is_owner = str(chat) == OWNER
     t0 = datetime.now()
     try:
+        note = re.sub(r"https?://\S+", "", raw).strip()
+        held, at = ctx.chat_data.pop("pending_note", ("", datetime.min))
+        if held and (datetime.now() - at).seconds < 30:
+            note = f"{held} {note}".strip()
         item = await asyncio.to_thread(pipeline.process, url, library.vocab(chat), note,
-                                       workdir, False, video)
+                                       None, is_owner)
     except Exception as e:
         await status.edit_text(f"No pude procesarlo: {e}")
         return
@@ -185,7 +162,6 @@ def main():
     app.add_handler(CommandHandler("gusto", gusto))
     app.add_handler(CommandHandler("preguntar", preguntar))
     app.add_handler(CallbackQueryHandler(on_remind, pattern="^remind:"))
-    app.add_handler(MessageHandler(filters.VIDEO | filters.Document.VIDEO, on_video))
     app.add_handler(MessageHandler(filters.TEXT | filters.CAPTION, on_message))
     app.run_polling()
 

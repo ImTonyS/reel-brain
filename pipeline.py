@@ -170,13 +170,9 @@ def analyze(frames, transcript, meta, vocab, note=""):
     return json.loads(resp.choices[0].message.content)
 
 
-def process(url, vocab, note="", workdir=None, use_cookies=True, video=None):
-    """url: Instagram link, downloaded anonymously. video: a local file (screen recording sent to the bot)."""
+def process(url, vocab, note="", workdir=None, use_cookies=True):
     workdir = Path(workdir or tempfile.mkdtemp(prefix="reel-"))
-    if video:
-        meta = {"uploader": "", "handle": "grabacion", "caption": "", "duration": None}
-    else:
-        video, meta = download(url, workdir, use_cookies)
+    video, meta = download(url, workdir, use_cookies)
     frames = extract_frames(video, workdir)
     transcript = transcribe(video, workdir)
     result = analyze(frames, transcript, meta, vocab, note)
