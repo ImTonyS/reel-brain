@@ -35,7 +35,7 @@ def write_ai_video(item):
     names = []
     for i, f in enumerate(item["best_frames"], 1):
         name = f"{base}-{i}.jpg"
-        shutil.copy(f, VAULT / CAPTURAS / name)
+        (VAULT / CAPTURAS / name).write_bytes(Path(f).read_bytes())
         names.append(name)
     path = VAULT / AI_CANVAS
     canvas = json.loads(path.read_text()) if path.exists() else {"nodes": [], "edges": []}
@@ -64,7 +64,7 @@ def write_visual(item, signals):
     names = []
     for i, f in enumerate(item["best_frames"], 1):
         name = f"{base}-{i}.jpg"
-        shutil.copy(f, dest / name)
+        (dest / name).write_bytes(Path(f).read_bytes())
         names.append(name)
 
     who = item["meta"].get("handle") or item["meta"].get("uploader")

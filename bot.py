@@ -125,8 +125,9 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             else:
                 ref = vault.write_knowledge(item, signals)
             vault.write_profile(library.profile(chat))
-        except Exception as e:
-            print("vault write failed:", e)
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
     ctx.bot_data[f"saved-{status.message_id}"] = ref
     secs = (datetime.now() - t0).seconds
