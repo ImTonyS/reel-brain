@@ -167,8 +167,8 @@ def process(url, vocab, note="", workdir=None):
     transcript = transcribe(video, workdir)
     result = analyze(frames, transcript, meta, vocab, note)
     best = [frames[i] for i in result["best_frames"] if 0 <= i < len(frames)] or frames[:2]
-    return {"url": url, "meta": meta, "transcript": transcript, "frames": frames,
-            "best_frames": best[:3], "workdir": workdir, "note": note, **result}
+    return {**result, "url": url, "meta": meta, "transcript": transcript, "frames": frames,
+            "best_frames": best[:3], "workdir": workdir, "note": note}
 
 
 def ask(question, saved):
