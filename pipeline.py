@@ -119,12 +119,12 @@ Fields:
 - title: short, concrete.
 - summary: 1-2 sentences.
 - key_points: for knowledge, the actual tips/facts (max 5). Otherwise the concrete visual details.
-- action: ONE concrete thing to do with this, phrased as an instruction. Empty if none.
+- action: ONE concrete thing to do with this, phrased as an instruction. For visual: how to use this look in your own content (never "copy the object shown"). Empty if none.
 - what_stands_out: visual kind only: what makes it look good (composition, type, color, motion). For any other kind: empty string. Never describe how a knowledge/place reel is filmed.
 - what_to_steal: visual kind only: the reusable visual recipe, as a candidate idea. Otherwise empty string.
 - style_tags: visual kind only, 2-5 short visual-style tags in Spanish. For any other kind: empty list.
 - themes: 1-3 short topic tags in Spanish.
-REUSE tags from the existing vocabulary below when they mean the same thing, so repeats can be counted. Only invent a new tag when nothing fits.
+REUSE a tag from the existing vocabulary ONLY when that exact technique is clearly visible in the frames; otherwise create a new precise tag. A wrong reused tag is worse than a new one.
 - best_frames: indices (0-based) of the 1-3 most representative frames.
 - place_name / place_city: only for place, else empty.
 Read on-screen text and burned-in subtitles from the frames; many reels have no speech.

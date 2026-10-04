@@ -87,7 +87,8 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Nota guardada.")
         return
     if not url:
-        await update.message.reply_text("Mándame el link de un reel de Instagram.")
+        # Telegram sends the share comment as its own message right before the link: hold it.
+        ctx.chat_data["pending_note"] = (raw.strip(), datetime.now())
         return
     is_owner = str(chat) == OWNER
     if not is_owner and library.count_today(chat) >= DAILY_LIMIT:
@@ -98,6 +99,9 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     t0 = datetime.now()
     try:
         note = re.sub(r"https?://\S+", "", raw).strip()
+        held, at = ctx.chat_data.pop("pending_note", ("", datetime.min))
+        if held and (datetime.now() - at).seconds < 30:
+            note = f"{held} {note}".strip()
         item = await asyncio.to_thread(pipeline.process, url, library.vocab(chat), note)
     except Exception as e:
         await status.edit_text(f"No pude procesarlo: {e}")
@@ -108,7 +112,7 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                                    "place_name", "place_city")}
     entry.update(date=date.today().isoformat(), uploader=item["meta"].get("uploader"))
     library.add(chat, entry)
-    signals = library.signals(chat, item)
+    signals = library.signals(chat, item)[:2]
 
     ref = None
     if is_owner:

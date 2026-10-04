@@ -57,7 +57,7 @@ def signals(user, item):
     p = profile(user)
     styles, themes = dict(p["styles"]), dict(p["themes"])
     out = []
-    for t in item.get("style_tags", []):
+    for t in sorted(item.get("style_tags", []), key=lambda t: -styles.get(t, 0)):
         n = styles.get(t, 0)
         if n >= 3:
             out.append(f"{n}a vez que guardas «{t}». Ya es parte de tu estilo.")
