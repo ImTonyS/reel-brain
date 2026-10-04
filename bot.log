@@ -1,9 +1,0 @@
-[mjpeg @ 0xa1505d180] Non full-range YUV is non-standard, set strict_std_compliance to at most unofficial to use it.
-[vost#0:0/mjpeg @ 0xa150bc000] [enc:mjpeg @ 0xa15009880] Error while opening encoder - maybe incorrect parameters such as bit_rate, rate, width or height.
-[vf#0:0 @ 0xa14d7c000] Error sending frames to consumers: Invalid argument
-[vf#0:0 @ 0xa14d7c000] Task finished with error code: -22 (Invalid argument)
-[vf#0:0 @ 0xa14d7c000] Terminating thread with return code -22 (Invalid argument)
-[vost#0:0/mjpeg @ 0xa150bc000] [enc:mjpeg @ 0xa15009880] Could not open encoder before EOF
-[vost#0:0/mjpeg @ 0xa150bc000] Task finished with error code: -22 (Invalid argument)
-[vost#0:0/mjpeg @ 0xa150bc000] Terminating thread with return code -22 (Invalid argument)
-[out#0/image2 @ 0xa14c04900] Nothing was written into output file, because at least one of its streams received no packets.

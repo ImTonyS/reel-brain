@@ -28,13 +28,23 @@ def clean_url(text):
 def download(url, workdir):
     opts = {"outtmpl": str(workdir / "video.%(ext)s"), "quiet": True, "no_warnings": True, "noprogress": True,
             "format": "mp4/bestvideo+bestaudio/best", "merge_output_format": "mp4"}
-    if os.getenv("IG_COOKIES_BROWSER"):
-        opts["cookiesfrombrowser"] = (os.getenv("IG_COOKIES_BROWSER"),)
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        if (info.get("duration") or 0) > MAX_SECONDS:
-            raise ValueError(f"El video dura más de {MAX_SECONDS // 60} min.")
-        ydl.download([url])
+    # Anonymous first; when Instagram rate-limits, retry logged in with browser cookies.
+    attempts = [None] + [b for b in (os.getenv("IG_COOKIES_BROWSER"), "chrome", "arc", "brave", "firefox", "safari") if b]
+    for browser in attempts:
+        try_opts = dict(opts, **({"cookiesfrombrowser": (browser,)} if browser else {}))
+        try:
+            with yt_dlp.YoutubeDL(try_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                if (info.get("duration") or 0) > MAX_SECONDS:
+                    raise ValueError(f"El video dura más de {MAX_SECONDS // 60} min.")
+                ydl.download([url])
+            break
+        except ValueError:
+            raise
+        except Exception as e:
+            last = e
+    else:
+        raise RuntimeError("Instagram no soltó el video (límite de descargas). Intenta en un rato.") from last
     video = next(workdir.glob("video.*"))
     return video, {
         "uploader": info.get("uploader") or info.get("channel") or "",
@@ -112,7 +122,7 @@ Output in Spanish (Mexico), terse, plain language, no emojis, no jargon.
 
 kind:
 - visual: the value is how it looks (art, design, typography, editing, framing, color, thumbnails, mood). Saved as inspiration.
-- knowledge: the value is information (tips, data, how-to, explanation).
+- knowledge: the value is information (tips, data, how-to, explanation, language lessons). If it TEACHES something, it is knowledge even if it is nicely designed. Visual is only when the person would save it for how it looks.
 - place: the value is a specific place to go (restaurant, cafe, spot).
 - other: none of the above.
 
