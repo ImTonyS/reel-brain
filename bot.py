@@ -103,7 +103,8 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         held, at = ctx.chat_data.pop("pending_note", ("", datetime.min))
         if held and (datetime.now() - at).seconds < 30:
             note = f"{held} {note}".strip()
-        item = await asyncio.to_thread(pipeline.process, url, library.vocab(chat), note)
+        item = await asyncio.to_thread(pipeline.process, url, library.vocab(chat), note,
+                                       None, is_owner)
     except Exception as e:
         await status.edit_text(f"No pude procesarlo: {e}")
         return
