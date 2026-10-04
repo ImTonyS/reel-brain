@@ -43,7 +43,10 @@ def write_visual(item, signals):
     steal = f"**Candidato (auto, Tony decide):** {_cell(item['what_to_steal'])}"
     if signals:
         steal += " · " + " ".join(_cell(s) for s in signals)
-    row = f"| {today} | {que_es} | {_cell(item['what_stands_out'])} | {steal} |"
+    liked = _cell(item['what_stands_out'])
+    if item.get("note"):
+        liked = f"**Tony:** {_cell(item['note'])} · {liked}"
+    row = f"| {today} | {que_es} | {liked} | {steal} |"
 
     path = VAULT / INSPO_MD
     lines = path.read_text().split("\n")
@@ -51,8 +54,8 @@ def write_visual(item, signals):
     lines.insert(header + 2, row)  # newest first, right under the separator
     path.write_text("\n".join(lines))
 
-    _add_to_canvas(item, names, today)
-    return names
+    node = _add_to_canvas(item, names, today)
+    return {"kind": "visual", "row": row, "node": node}
 
 
 def _add_to_canvas(item, names, today):
@@ -70,11 +73,13 @@ def _add_to_canvas(item, names, today):
     rid = f"reel-{datetime.now():%H%M%S}"
     nodes.append({"id": rid, "type": "text", "x": AUTO_X, "y": y, "width": 380, "height": 360,
                   "text": f"**{item['title']} ({today})**\n{item['what_stands_out']}\n\n"
-                          f"**Qué me robo (candidato):** {item['what_to_steal']}\n\n[reel]({item['url']})"})
+                          f"**Qué me robo (candidato):** {item['what_to_steal']}\n\n[reel]({item['url']})"
+                          + (f"\n\n**Mi nota:** {item['note']}" if item.get("note") else "")})
     for i, n in enumerate(names):
         nodes.append({"id": f"{rid}-img{i}", "type": "file", "file": f"{CAPTURAS}/{n}",
                       "x": AUTO_X + 400 + i * 220, "y": y, "width": 200, "height": 356})
     path.write_text(json.dumps(canvas, ensure_ascii=False, indent="\t"))
+    return rid
 
 
 def write_knowledge(item, signals):
@@ -108,6 +113,7 @@ Reel de Instagram de @{who} que [[01-YOU/identity|Tony]] guardó el {today}, des
 
 ## Acción
 {item['action'] or '_Ninguna concreta._'}
+{f"{chr(10)}## Mi nota{chr(10)}{item['note']}{chr(10)}" if item.get('note') else ''}
 
 ## Patrón
 {chr(10).join('- ' + s for s in signals) or '_Primera vez con estos temas._'}
@@ -117,7 +123,7 @@ Reel de Instagram de @{who} que [[01-YOU/identity|Tony]] guardó el {today}, des
 """
     (VAULT / KNOWLEDGE / name).write_text(body)
     _add_to_learn_canvas(item, name)
-    return name
+    return {"kind": "knowledge", "file": f"{KNOWLEDGE}/{name}"}
 
 
 def _add_to_learn_canvas(item, name):
@@ -177,3 +183,26 @@ Total guardado: {p['total']}
 {block(p['themes'], 'temas')}
 """
     (VAULT / PROFILE_MD).write_text(body)
+
+
+def add_note(ref, note):
+    """Attach a note sent later (reply to the bot's card) to what was already saved."""
+    if ref["kind"] == "knowledge":
+        path = VAULT / ref["file"]
+        text = path.read_text()
+        marker = "## Relacionado"
+        path.write_text(text.replace(marker, f"## Mi nota\n{note}\n\n{marker}", 1))
+        return
+    md = VAULT / INSPO_MD
+    row = ref["row"]
+    parts = row.split(" | ")
+    parts[2] = f"**Tony:** {_cell(note)} · {parts[2]}"
+    new_row = " | ".join(parts)
+    md.write_text(md.read_text().replace(row, new_row, 1))
+    ref["row"] = new_row
+    cpath = VAULT / CANVAS
+    canvas = json.loads(cpath.read_text())
+    for n in canvas["nodes"]:
+        if n["id"] == ref["node"]:
+            n["text"] += f"\n\n**Mi nota:** {note}"
+    cpath.write_text(json.dumps(canvas, ensure_ascii=False, indent="\t"))

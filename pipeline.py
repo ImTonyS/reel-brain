@@ -127,10 +127,11 @@ Fields:
 REUSE tags from the existing vocabulary below when they mean the same thing, so repeats can be counted. Only invent a new tag when nothing fits.
 - best_frames: indices (0-based) of the 1-3 most representative frames.
 - place_name / place_city: only for place, else empty.
-Read on-screen text and burned-in subtitles from the frames; many reels have no speech."""
+Read on-screen text and burned-in subtitles from the frames; many reels have no speech.
+If user_note is present, it is what the person cared about in this reel: center the analysis on it."""
 
 
-def analyze(frames, transcript, meta, vocab):
+def analyze(frames, transcript, meta, vocab, note=""):
     content = [{"type": "text", "text": json.dumps({
         "uploader": meta.get("uploader"),
         "caption": meta.get("caption"),
@@ -138,6 +139,7 @@ def analyze(frames, transcript, meta, vocab):
         "existing_style_tags": vocab.get("style_tags", []),
         "existing_themes": vocab.get("themes", []),
         "frame_count": len(frames),
+        "user_note": note,
     }, ensure_ascii=False)}]
     for f in frames:
         b64 = base64.b64encode(Path(f).read_bytes()).decode()
@@ -152,15 +154,15 @@ def analyze(frames, transcript, meta, vocab):
     return json.loads(resp.choices[0].message.content)
 
 
-def process(url, vocab, workdir=None):
+def process(url, vocab, note="", workdir=None):
     workdir = Path(workdir or tempfile.mkdtemp(prefix="reel-"))
     video, meta = download(url, workdir)
     frames = extract_frames(video, workdir)
     transcript = transcribe(video, workdir)
-    result = analyze(frames, transcript, meta, vocab)
+    result = analyze(frames, transcript, meta, vocab, note)
     best = [frames[i] for i in result["best_frames"] if 0 <= i < len(frames)] or frames[:2]
     return {"url": url, "meta": meta, "transcript": transcript, "frames": frames,
-            "best_frames": best[:3], "workdir": workdir, **result}
+            "best_frames": best[:3], "workdir": workdir, "note": note, **result}
 
 
 def ask(question, saved):

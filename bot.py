@@ -1,6 +1,7 @@
 """Telegram entry point: share a reel to the bot, get it back as something useful."""
 import asyncio
 import html
+import re
 import os
 import shutil
 from datetime import date, datetime, time, timedelta
@@ -36,6 +37,9 @@ def card(item, signals):
         lines += ["", f"Haz esto: {item['action']}"]
     if signals:
         lines += ["", "Tu patrón:"] + [f"→ {s}" for s in signals]
+    if item.get("note"):
+        lines += ["", f"Tu nota: {item['note']}"]
+    lines += ["", "Responde a este mensaje para agregar una nota."]
     text = html.escape("\n".join(lines))
     return text.replace(html.escape(lines[0]), f"<b>{html.escape(lines[0])}</b>", 1)
 
@@ -73,7 +77,15 @@ async def preguntar(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat.id
-    url = pipeline.clean_url(update.message.text or update.message.caption or "")
+    raw = update.message.text or update.message.caption or ""
+    url = pipeline.clean_url(raw)
+    reply_to = update.message.reply_to_message
+    if not url and reply_to and f"saved-{reply_to.message_id}" in ctx.bot_data:
+        ref = ctx.bot_data[f"saved-{reply_to.message_id}"]
+        if ref:
+            vault.add_note(ref, raw.strip())
+        await update.message.reply_text("Nota guardada.")
+        return
     if not url:
         await update.message.reply_text("Mándame el link de un reel de Instagram.")
         return
@@ -85,7 +97,8 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     status = await update.message.reply_text("Viendo el reel…")
     t0 = datetime.now()
     try:
-        item = await asyncio.to_thread(pipeline.process, url, library.vocab(chat))
+        note = re.sub(r"https?://\S+", "", raw).strip()
+        item = await asyncio.to_thread(pipeline.process, url, library.vocab(chat), note)
     except Exception as e:
         await status.edit_text(f"No pude procesarlo: {e}")
         return
@@ -97,16 +110,18 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     library.add(chat, entry)
     signals = library.signals(chat, item)
 
+    ref = None
     if is_owner:
         try:
             if item["kind"] == "visual":
-                vault.write_visual(item, signals)
+                ref = vault.write_visual(item, signals)
             else:
-                vault.write_knowledge(item, signals)
+                ref = vault.write_knowledge(item, signals)
             vault.write_profile(library.profile(chat))
         except Exception as e:
             print("vault write failed:", e)
 
+    ctx.bot_data[f"saved-{status.message_id}"] = ref
     secs = (datetime.now() - t0).seconds
     buttons = None
     if item["action"]:
