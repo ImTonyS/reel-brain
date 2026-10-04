@@ -122,7 +122,7 @@ Output in Spanish (Mexico), terse, plain language, no emojis, no jargon.
 
 kind:
 - visual: the value is how it looks (art, design, typography, editing, framing, color, thumbnails, mood). Saved as inspiration.
-- knowledge: the value is information (tips, data, how-to, explanation, language lessons). If it TEACHES something, it is knowledge even if it is nicely designed. Visual is only when the person would save it for how it looks.
+- knowledge: the value is information (tips, data, how-to, explanation, language lessons). If it TEACHES something, it is knowledge even if it is nicely designed. Visual is only when the person would save it for how it looks (art, design, editing, typography), with nothing to learn. When in doubt between visual and knowledge, choose knowledge. A user_note always wins.
 - place: the value is a specific place to go (restaurant, cafe, spot).
 - other: none of the above.
 
