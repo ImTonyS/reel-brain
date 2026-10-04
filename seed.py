@@ -15,7 +15,7 @@ resp = pipeline.client.chat.completions.create(
     messages=[{"role": "system", "content":
                "For each inspiration-board row, return title (short, Spanish), kind (visual|knowledge|other), "
                "style_tags (2-5 short visual-style tags in Spanish, consistent wording across rows so repeats match, "
-               "e.g. the same tag every time the same technique appears) and themes (1-3 Spanish topic tags)."},
+               "e.g. the same tag every time the same technique appears) and themes (1-3 Spanish topic tags). Use a SMALL shared vocabulary: at most 12 distinct style tags across ALL rows, broad enough to repeat (e.g. \"texto detrás del sujeto\", \"tipografía grotesca neutra\", \"plano fijo\", \"collage de fotogramas\", \"serif de contraste\"). Identical technique = identical tag string."},
               {"role": "user", "content": "\n".join(rows)}],
     response_format={"type": "json_schema", "json_schema": {"name": "rows", "strict": True, "schema": {
         "type": "object", "additionalProperties": False, "required": ["rows"],

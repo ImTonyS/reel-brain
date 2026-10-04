@@ -15,7 +15,7 @@ TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe"
 MAX_SECONDS = int(os.getenv("MAX_SECONDS", "180"))
 MAX_FRAMES = 6
 
-client = OpenAI()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "missing")
 
 IG_RE = re.compile(r"https?://(www\.)?instagram\.com/(reel|reels|p|tv)/([A-Za-z0-9_-]+)")
 
@@ -26,7 +26,7 @@ def clean_url(text):
 
 
 def download(url, workdir):
-    opts = {"outtmpl": str(workdir / "video.%(ext)s"), "quiet": True, "no_warnings": True,
+    opts = {"outtmpl": str(workdir / "video.%(ext)s"), "quiet": True, "no_warnings": True, "noprogress": True,
             "format": "mp4/bestvideo+bestaudio/best", "merge_output_format": "mp4"}
     if os.getenv("IG_COOKIES_BROWSER"):
         opts["cookiesfrombrowser"] = (os.getenv("IG_COOKIES_BROWSER"),)
@@ -38,7 +38,7 @@ def download(url, workdir):
     video = next(workdir.glob("video.*"))
     return video, {
         "uploader": info.get("uploader") or info.get("channel") or "",
-        "handle": info.get("uploader_id") or info.get("channel") or "",
+        "handle": info.get("channel") or info.get("uploader") or "",
         "caption": (info.get("description") or "")[:1500],
         "duration": info.get("duration"),
     }
@@ -147,6 +147,7 @@ def analyze(frames, transcript, meta, vocab):
         messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": content}],
         response_format={"type": "json_schema",
                          "json_schema": {"name": "reel", "schema": SCHEMA, "strict": True}},
+        reasoning_effort="minimal",
     )
     return json.loads(resp.choices[0].message.content)
 
