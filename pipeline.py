@@ -120,9 +120,9 @@ Fields:
 - summary: 1-2 sentences.
 - key_points: for knowledge, the actual tips/facts (max 5). Otherwise the concrete visual details.
 - action: ONE concrete thing to do with this, phrased as an instruction. Empty if none.
-- what_stands_out: what makes it good, specific and observable (for visual: composition, type, color, motion).
-- what_to_steal: the reusable recipe, as a candidate idea, never as a decision.
-- style_tags: 2-5 short visual-style tags in Spanish (visual kind; can be empty otherwise).
+- what_stands_out: visual kind only: what makes it look good (composition, type, color, motion). For any other kind: empty string. Never describe how a knowledge/place reel is filmed.
+- what_to_steal: visual kind only: the reusable visual recipe, as a candidate idea. Otherwise empty string.
+- style_tags: visual kind only, 2-5 short visual-style tags in Spanish. For any other kind: empty list.
 - themes: 1-3 short topic tags in Spanish.
 REUSE tags from the existing vocabulary below when they mean the same thing, so repeats can be counted. Only invent a new tag when nothing fits.
 - best_frames: indices (0-based) of the 1-3 most representative frames.

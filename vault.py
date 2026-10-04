@@ -13,6 +13,7 @@ CANVAS = "01-YOU/marketing/inspo.canvas"
 CAPTURAS = "01-YOU/marketing/inspo-capturas"
 PROFILE_MD = "01-YOU/marketing/perfil-de-gusto.md"
 KNOWLEDGE = "08-KNOWLEDGE"
+LEARN_CANVAS = "08-KNOWLEDGE/reels-aprendizaje.canvas"
 
 AUTO_X, AUTO_Y = -900, 1100  # canvas area below the hand-made zones
 
@@ -115,7 +116,31 @@ Reel de Instagram de @{who} que [[01-YOU/identity|Tony]] guardó el {today}, des
 [[01-YOU/marketing/perfil-de-gusto]] · [[06-LOG/Daily/{today}]]
 """
     (VAULT / KNOWLEDGE / name).write_text(body)
+    _add_to_learn_canvas(item, name)
     return name
+
+
+def _add_to_learn_canvas(item, name):
+    """Content-only board for knowledge reels: one card per note, grouped in columns by theme."""
+    path = VAULT / LEARN_CANVAS
+    canvas = json.loads(path.read_text()) if path.exists() else {"nodes": [], "edges": []}
+    nodes = canvas["nodes"]
+    if not nodes:
+        nodes.append({"id": "learn-title", "type": "text", "x": 0, "y": -200, "width": 600, "height": 140,
+                      "text": "# Lo que estoy aprendiendo (reels)\nCada reel informativo que mando al bot cae aquí como nota, agrupado por tema. Solo contenido, nada de cómo está grabado."})
+    theme = (item["themes"] or ["otros"])[0]
+    cols = [n for n in nodes if n["id"].startswith("theme-")]
+    col = next((n for n in cols if n["text"] == f"## {theme}"), None)
+    if not col:
+        col = {"id": f"theme-{len(cols)}", "type": "text", "x": len(cols) * 460, "y": 0,
+               "width": 420, "height": 80, "text": f"## {theme}"}
+        nodes.append(col)
+    below = [n for n in nodes if n.get("col") == col["id"]]
+    y = max([n["y"] + n["height"] for n in below], default=col["y"] + col["height"]) + 30
+    nodes.append({"id": f"learn-{datetime.now():%H%M%S}", "type": "file",
+                  "file": f"{KNOWLEDGE}/{name}", "x": col["x"], "y": y, "width": 420, "height": 400,
+                  "col": col["id"]})
+    path.write_text(json.dumps(canvas, ensure_ascii=False, indent="\t"))
 
 
 def write_profile(p):

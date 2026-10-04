@@ -24,7 +24,7 @@ KIND_LABEL = {"visual": "Referencia visual", "knowledge": "Para aprender",
 
 def card(item, signals):
     lines = [f"{KIND_LABEL[item['kind']]} · {item['title']}", "", item["summary"]]
-    if item["kind"] == "visual":
+    if item["kind"] == "visual" and item["what_stands_out"]:
         lines += ["", f"Qué destaca: {item['what_stands_out']}",
                   f"Qué te robas: {item['what_to_steal']}"]
     elif item["key_points"]:
