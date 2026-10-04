@@ -110,7 +110,7 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     entry = {k: item[k] for k in ("url", "kind", "title", "summary", "key_points", "action",
                                    "what_stands_out", "what_to_steal", "style_tags", "themes",
-                                   "place_name", "place_city")}
+                                   "place_name", "place_city", "board")}
     entry.update(date=date.today().isoformat(), uploader=item["meta"].get("uploader"))
     library.add(chat, entry)
     signals = library.signals(chat, item)[:2]

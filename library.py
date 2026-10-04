@@ -42,7 +42,7 @@ def count_today(user):
 
 def profile(user):
     es = entries(user)
-    styles = Counter(t for e in es if e["kind"] == "visual" for t in e.get("style_tags", []))
+    styles = Counter(t for e in es if e["kind"] == "visual" and e.get("board") != "ai_video" for t in e.get("style_tags", []))
     themes = Counter(t for e in es if e["kind"] != "visual" for t in e.get("themes", []))
     examples = {}
     for e in es:
