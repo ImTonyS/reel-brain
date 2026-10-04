@@ -88,6 +88,7 @@ SCHEMA = {
     "additionalProperties": False,
     "properties": {
         "kind": {"type": "string", "enum": ["visual", "knowledge", "place", "other"]},
+        "board": {"type": "string", "enum": ["inspo", "ai_video", "none"]},
         "title": {"type": "string"},
         "language": {"type": "string"},
         "summary": {"type": "string"},
@@ -101,7 +102,7 @@ SCHEMA = {
         "place_name": {"type": "string"},
         "place_city": {"type": "string"},
     },
-    "required": ["kind", "title", "language", "summary", "key_points", "action",
+    "required": ["kind", "board", "title", "language", "summary", "key_points", "action",
                  "what_stands_out", "what_to_steal", "style_tags", "themes",
                  "best_frames", "place_name", "place_city"],
 }
@@ -114,6 +115,11 @@ kind:
 - knowledge: the value is information (tips, data, how-to, explanation).
 - place: the value is a specific place to go (restaurant, cafe, spot).
 - other: none of the above.
+
+board (where a visual reel is filed):
+- ai_video: the video itself is AI-generated (the user note says so, or it is clearly AI-made). Saved as reference for making AI content.
+- inspo: any other visual reference.
+- none: not visual.
 
 Fields:
 - title: short, concrete.

@@ -14,6 +14,7 @@ CAPTURAS = "01-YOU/marketing/inspo-capturas"
 PROFILE_MD = "01-YOU/marketing/perfil-de-gusto.md"
 KNOWLEDGE = "08-KNOWLEDGE"
 LEARN_CANVAS = "08-KNOWLEDGE/reels-aprendizaje.canvas"
+AI_CANVAS = "01-YOU/marketing/referencias-video-ai.canvas"
 
 AUTO_X, AUTO_Y = -900, 1100  # canvas area below the hand-made zones
 
@@ -25,6 +26,35 @@ def slug(text, n=40):
 
 def _cell(text):
     return (text or "").replace("|", "\\|").replace("\n", " ").strip()
+
+
+def write_ai_video(item):
+    """AI-generated video references: own canvas, frames + how it was made. Not in the inspo table."""
+    today = date.today().isoformat()
+    base = f"{today}-ai-{slug(item['meta'].get('handle') or item['title'], 24)}"
+    names = []
+    for i, f in enumerate(item["best_frames"], 1):
+        name = f"{base}-{i}.jpg"
+        shutil.copy(f, VAULT / CAPTURAS / name)
+        names.append(name)
+    path = VAULT / AI_CANVAS
+    canvas = json.loads(path.read_text()) if path.exists() else {"nodes": [], "edges": []}
+    nodes = canvas["nodes"]
+    if not nodes:
+        nodes.append({"id": "ai-title", "type": "text", "x": 0, "y": -200, "width": 600, "height": 140,
+                      "text": "# Referencias de video hecho con IA\nLo que mando al bot marcado como hecho con IA. Para cuando haga contenido con IA. Relacionado: [[01-YOU/marketing/inspo]]"})
+    y = max([n["y"] + n["height"] for n in nodes if n["id"].startswith("ai-r")], default=0) + 40
+    rid = f"ai-r{datetime.now():%H%M%S}"
+    text = (f"**{item['title']} ({today})**\n{item['summary']}\n\n**Qué destaca:** {item['what_stands_out']}\n\n"
+            f"**Qué me robo (candidato):** {item['what_to_steal']}\n\n[reel]({item['url']})")
+    if item.get("note"):
+        text += f"\n\n**Mi nota:** {item['note']}"
+    nodes.append({"id": rid, "type": "text", "x": 0, "y": y, "width": 380, "height": 380, "text": text})
+    for i, n in enumerate(names):
+        nodes.append({"id": f"{rid}-img{i}", "type": "file", "file": f"{CAPTURAS}/{n}",
+                      "x": 400 + i * 220, "y": y, "width": 200, "height": 356})
+    path.write_text(json.dumps(canvas, ensure_ascii=False, indent="\t"))
+    return {"kind": "ai_video", "node": rid}
 
 
 def write_visual(item, signals):
@@ -187,6 +217,14 @@ Total guardado: {p['total']}
 
 def add_note(ref, note):
     """Attach a note sent later (reply to the bot's card) to what was already saved."""
+    if ref["kind"] == "ai_video":
+        cpath = VAULT / AI_CANVAS
+        canvas = json.loads(cpath.read_text())
+        for n in canvas["nodes"]:
+            if n["id"] == ref["node"]:
+                n["text"] += f"\n\n**Mi nota:** {note}"
+        cpath.write_text(json.dumps(canvas, ensure_ascii=False, indent="\t"))
+        return
     if ref["kind"] == "knowledge":
         path = VAULT / ref["file"]
         text = path.read_text()

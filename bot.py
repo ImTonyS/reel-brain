@@ -24,7 +24,8 @@ KIND_LABEL = {"visual": "Referencia visual", "knowledge": "Para aprender",
 
 
 def card(item, signals):
-    lines = [f"{KIND_LABEL[item['kind']]} · {item['title']}", "", item["summary"]]
+    label = "Video hecho con IA" if item.get("board") == "ai_video" else KIND_LABEL[item["kind"]]
+    lines = [f"{label} · {item['title']}", "", item["summary"]]
     if item["kind"] == "visual" and item["what_stands_out"]:
         lines += ["", f"Qué destaca: {item['what_stands_out']}",
                   f"Qué te robas: {item['what_to_steal']}"]
@@ -117,7 +118,9 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     ref = None
     if is_owner:
         try:
-            if item["kind"] == "visual":
+            if item["kind"] == "visual" and item["board"] == "ai_video":
+                ref = vault.write_ai_video(item)
+            elif item["kind"] == "visual":
                 ref = vault.write_visual(item, signals)
             else:
                 ref = vault.write_knowledge(item, signals)
